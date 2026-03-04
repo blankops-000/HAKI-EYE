@@ -31,7 +31,7 @@ const navigation = [
   { to: '/dashboard/open-data', label: 'Open Data', icon: Database },
 ];
 
-function NavLinks({ onNavigate }) {
+function NavLinks({ onNavigate, compact = false }) {
   return (
     <nav className="space-y-1" aria-label="Dashboard navigation">
       {navigation.map((item) => {
@@ -43,8 +43,12 @@ function NavLinks({ onNavigate }) {
             end={item.to === '/dashboard'}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive ? 'bg-kenyaRed text-white shadow' : 'text-slate-600 hover:bg-slate-100 hover:text-kenyaGreen'
+              `flex items-center gap-3 rounded-lg px-3 ${
+                compact ? 'py-2.5 text-[13px]' : 'py-2 text-sm'
+              } font-medium transition ${
+                isActive
+                  ? 'bg-kenyaRed text-white shadow'
+                  : 'text-slate-700 hover:bg-slate-100 hover:text-kenyaGreen'
               }`
             }
           >
@@ -75,9 +79,13 @@ function AppLayout() {
             <ThemeToggle compactOnMobile />
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-lg border border-slate-300 p-2 text-slate-700 lg:hidden"
+              className={`inline-flex items-center justify-center rounded-lg border border-slate-300 p-2 text-slate-700 lg:hidden ${
+                mobileNavOpen ? 'bg-slate-100' : 'bg-white'
+              }`}
               onClick={() => setMobileNavOpen((open) => !open)}
               aria-label="Toggle navigation"
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-dashboard-nav"
             >
               {mobileNavOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -90,8 +98,19 @@ function AppLayout() {
 
       {mobileNavOpen && (
         <div className="mx-auto max-w-7xl px-4 pt-3 sm:px-6 lg:hidden">
-          <aside className="kenya-panel kenya-card rounded-lg p-3 shadow-soft">
-            <NavLinks onNavigate={() => setMobileNavOpen(false)} />
+          <aside
+            id="mobile-dashboard-nav"
+            className="kenya-panel kenya-card surface-animate rounded-lg p-3 shadow-soft"
+          >
+            <div className="mb-2 flex items-center justify-between border-b border-slate-200 pb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Navigation</p>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                {navigation.length} sections
+              </span>
+            </div>
+            <div className="max-h-[65vh] overflow-auto pr-1">
+              <NavLinks compact onNavigate={() => setMobileNavOpen(false)} />
+            </div>
           </aside>
         </div>
       )}
