@@ -32,14 +32,14 @@ function LandingPage() {
       <LandingNav />
 
       <main>
-        <section className="mx-auto max-w-7xl px-6 pb-12 pt-16" id="about">
-          <div className="kenya-panel kenya-card max-w-4xl rounded-lg p-8 shadow-soft">
+        <section className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 sm:pb-12 sm:pt-16" id="about">
+          <div className="kenya-panel kenya-card max-w-4xl rounded-lg p-5 shadow-soft sm:p-8">
             <div className="kenya-flag-band mb-5" />
             <p className="text-sm font-semibold uppercase tracking-wider text-emerald">Civic-Tech Intelligence</p>
-            <h1 className="mt-4 text-4xl font-bold leading-tight text-navy md:text-5xl">
+            <h1 className="mt-4 text-3xl font-bold leading-tight text-navy sm:text-4xl md:text-5xl">
               Bringing Transparency to Campaign Finance
             </h1>
-            <p className="mt-5 text-lg text-slate-600">
+            <p className="mt-4 text-base text-slate-600 sm:mt-5 sm:text-lg">
               UWAZI-EYE helps identify suspicious donation patterns, compare party-level funding behavior, and make
               campaign finance records easier to audit in Kenya.
             </p>
@@ -60,7 +60,7 @@ function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-4 px-6 pb-10 md:grid-cols-3">
+        <section className="mx-auto grid max-w-7xl gap-4 px-4 pb-10 sm:px-6 md:grid-cols-3">
           {trustMetrics.map((metric) => (
             <article key={metric.label} className="kenya-panel kenya-card rounded-lg p-4 shadow-soft">
               <p className="text-xs uppercase tracking-wide text-slate-500">{metric.label}</p>
@@ -69,7 +69,7 @@ function LandingPage() {
           ))}
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-5 px-6 pb-14 md:grid-cols-3">
+        <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-14 sm:px-6 md:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
