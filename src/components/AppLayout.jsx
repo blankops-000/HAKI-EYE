@@ -31,6 +31,32 @@ const navigation = [
   { to: '/dashboard/open-data', label: 'Open Data', icon: Database },
 ];
 
+function NavLinks({ onNavigate }) {
+  return (
+    <nav className="space-y-1" aria-label="Dashboard navigation">
+      {navigation.map((item) => {
+        const Icon = item.icon;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/dashboard'}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                isActive ? 'bg-kenyaRed text-white shadow' : 'text-slate-600 hover:bg-slate-100 hover:text-kenyaGreen'
+              }`
+            }
+          >
+            <Icon size={18} />
+            {item.label}
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
+
 function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -63,45 +89,16 @@ function AppLayout() {
       </header>
 
       {mobileNavOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 z-20 bg-black/40 lg:hidden"
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Close navigation overlay"
-        />
+        <div className="mx-auto max-w-7xl px-4 pt-3 sm:px-6 lg:hidden">
+          <aside className="kenya-panel kenya-card rounded-lg p-3 shadow-soft">
+            <NavLinks onNavigate={() => setMobileNavOpen(false)} />
+          </aside>
+        </div>
       )}
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-4 sm:py-6 lg:grid-cols-[260px_1fr] lg:px-6">
-        <aside
-          className={`kenya-panel kenya-card fixed inset-y-0 left-0 z-30 w-72 overflow-y-auto p-3 shadow-soft transition-transform lg:sticky lg:top-24 lg:h-fit lg:w-auto lg:translate-x-0 ${
-            mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="pt-20 lg:pt-0">
-            <nav className="space-y-1" aria-label="Dashboard navigation">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/dashboard'}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                        isActive
-                          ? 'bg-kenyaRed text-white shadow'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-kenyaGreen'
-                      }`
-                    }
-                  >
-                    <Icon size={18} />
-                    {item.label}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </div>
+        <aside className="kenya-panel kenya-card hidden h-fit rounded-lg p-3 shadow-soft lg:sticky lg:top-24 lg:block">
+          <NavLinks />
         </aside>
 
         <main className="min-w-0 space-y-6 pb-8 lg:pl-0">
