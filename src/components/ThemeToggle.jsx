@@ -4,36 +4,35 @@ import { useEffect, useState } from 'react';
 const STORAGE_KEY = 'uwazi_eye_theme';
 
 function getInitialTheme() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved === 'dark' || saved === 'light') {
-    return saved;
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved === 'dark' || saved === 'light') {
+      return saved;
+    }
+  } catch {
+    return 'dark';
   }
   return 'dark';
 }
 
 function applyTheme(theme) {
   document.documentElement.classList.toggle('dark', theme === 'dark');
-  localStorage.setItem(STORAGE_KEY, theme);
-  window.dispatchEvent(new Event('themechange'));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // ignore storage restrictions
+  }
 }
 
 function ThemeToggle() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(() => getInitialTheme());
 
   useEffect(() => {
-    const initial = getInitialTheme();
-    setTheme(initial);
-    applyTheme(initial);
-
-    const syncTheme = () => setTheme(getInitialTheme());
-    window.addEventListener('themechange', syncTheme);
-    return () => window.removeEventListener('themechange', syncTheme);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    applyTheme(next);
+    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
   };
 
   const isDark = theme === 'dark';
@@ -52,4 +51,3 @@ function ThemeToggle() {
 }
 
 export default ThemeToggle;
-

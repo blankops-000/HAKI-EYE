@@ -12,9 +12,14 @@
     />
     <script>
       (function () {
-        const key = 'uwazi_eye_theme';
-        const saved = localStorage.getItem(key);
-        const useDark = saved === 'dark' || saved === null;
+        var key = 'uwazi_eye_theme';
+        var useDark = true;
+        try {
+          var saved = window.localStorage.getItem(key);
+          useDark = saved === 'dark' || saved === null;
+        } catch (e) {
+          useDark = true;
+        }
         document.documentElement.classList.toggle('dark', useDark);
       })();
     </script>

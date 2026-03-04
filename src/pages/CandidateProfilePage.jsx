@@ -22,7 +22,7 @@ import { candidateProfileData, candidatesData } from '../data/mockData';
 import { lineChartCursor, sharedTooltipProps } from '../utils/chartTheme';
 import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
 
-const pieColors = ['#10B981', '#0F172A', '#F59E0B'];
+const pieColors = ['#10B981', '#da139b', '#F59E0B'];
 
 function CandidateProfilePage() {
   const { candidateId } = useParams();
