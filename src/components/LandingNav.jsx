@@ -15,7 +15,7 @@ function LandingNav() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <ThemeToggle compactOnMobile />
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-lg border border-slate-300 p-2 text-slate-700 md:hidden"

@@ -24,7 +24,7 @@ function applyTheme(theme) {
   }
 }
 
-function ThemeToggle() {
+function ThemeToggle({ compactOnMobile = false }) {
   const [theme, setTheme] = useState(() => getInitialTheme());
 
   useEffect(() => {
@@ -41,11 +41,18 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex items-center gap-2 rounded-lg border border-kenyaGreen bg-white px-3 py-2 text-xs font-medium text-kenyaGreen hover:border-kenyaRed hover:text-kenyaRed dark:bg-zinc-800 dark:text-emerald-300 dark:border-emerald-500"
+      className={`inline-flex items-center rounded-lg border border-kenyaGreen bg-white py-2 text-xs font-medium text-kenyaGreen hover:border-kenyaRed hover:text-kenyaRed dark:bg-zinc-800 dark:text-emerald-300 dark:border-emerald-500 ${
+        compactOnMobile ? 'gap-0 px-2 sm:gap-2 sm:px-3' : 'gap-2 px-3'
+      }`}
       aria-label="Toggle dark mode"
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDark ? <Sun size={16} /> : <Moon size={16} />}
-      {isDark ? 'Light Mode' : 'Dark Mode'}
+      {compactOnMobile ? (
+        <span className="hidden sm:inline">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+      ) : (
+        <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+      )}
     </button>
   );
 }
