@@ -1,4 +1,3 @@
-﻿import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   CartesianGrid,
@@ -18,7 +17,8 @@ import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
 import StatCard from '../components/StatCard';
-import { candidateProfileData, candidatesData } from '../data/mockData';
+import { getCandidateProfile } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { lineChartCursor, sharedTooltipProps } from '../utils/chartTheme';
 import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
 
@@ -27,11 +27,15 @@ const pieColors = ['#10B981', '#da139b', '#F59E0B'];
 function CandidateProfilePage() {
   const { candidateId } = useParams();
 
-  const fallbackCandidate = useMemo(() => {
-    return candidatesData.find((candidate) => candidate.id === candidateId);
-  }, [candidateId]);
+  const { data: profile, loading } = useApi(getCandidateProfile, [candidateId], { skip: !candidateId });
 
-  const profile = candidateProfileData[candidateId];
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Loading candidate profile…
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -40,7 +44,6 @@ function CandidateProfilePage() {
         <Link to="/dashboard/candidates" className="font-medium text-emerald">
           Return to listing.
         </Link>
-        {fallbackCandidate && <div className="mt-2">Try selecting {fallbackCandidate.name} from the list again.</div>}
       </div>
     );
   }
@@ -134,4 +137,3 @@ function CandidateProfilePage() {
 }
 
 export default CandidateProfilePage;
-

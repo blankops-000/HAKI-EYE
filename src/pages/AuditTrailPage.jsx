@@ -1,15 +1,23 @@
-﻿import DataTable from '../components/DataTable';
+import { useMemo } from 'react';
+import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
-import { auditTrailBlocks } from '../data/mockData';
+import { getAuditTrail } from '../utils/api';
+import { useApi } from '../utils/useApi';
 
 function AuditTrailPage() {
-  const chainIntact = auditTrailBlocks.every((block, index) => {
-    if (index === 0) {
-      return block.previousHash === '0000000000000000';
+  const { data: auditTrailBlocks } = useApi(getAuditTrail);
+
+  const { chainIntact, latestBlock } = useMemo(() => {
+    if (!auditTrailBlocks || auditTrailBlocks.length === 0) {
+      return { chainIntact: true, latestBlock: null };
     }
-    return block.previousHash === auditTrailBlocks[index - 1].hash;
-  });
+    const intact = auditTrailBlocks.every((block, index) => {
+      if (index === 0) return block.previousHash === '0000000000000000';
+      return block.previousHash === auditTrailBlocks[index - 1].hash;
+    });
+    return { chainIntact: intact, latestBlock: auditTrailBlocks[auditTrailBlocks.length - 1] };
+  }, [auditTrailBlocks]);
 
   const columns = [
     { header: 'Block', accessor: 'block' },
@@ -38,14 +46,14 @@ function AuditTrailPage() {
       />
 
       <section className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Blocks Recorded" value={auditTrailBlocks.length} />
+        <StatCard title="Blocks Recorded" value={auditTrailBlocks?.length ?? '—'} />
         <StatCard
           title="Chain Integrity"
           value={chainIntact ? 'Valid' : 'Compromised'}
           helper="Hash-link verification"
           tone={chainIntact ? 'positive' : 'danger'}
         />
-        <StatCard title="Latest Block" value={`#${auditTrailBlocks[auditTrailBlocks.length - 1].block}`} />
+        <StatCard title="Latest Block" value={latestBlock ? `#${latestBlock.block}` : '—'} />
       </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft">
@@ -56,11 +64,10 @@ function AuditTrailPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-navy">Audit Ledger</h2>
-        <DataTable columns={columns} data={auditTrailBlocks} caption="Audit trail ledger" />
+        <DataTable columns={columns} data={auditTrailBlocks ?? []} caption="Audit trail ledger" />
       </section>
     </div>
   );
 }
 
 export default AuditTrailPage;
-

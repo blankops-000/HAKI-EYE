@@ -1,9 +1,10 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
 import StatCard from '../components/StatCard';
-import { aiDetectorFindings, alertsData, auditTrailBlocks, candidateProfileData } from '../data/mockData';
+import { getAIDetectorFindings, getAlerts, getAuditTrail, getCandidateProfile } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { formatCurrency } from '../utils/formatters';
 
 const steps = [
@@ -32,11 +33,20 @@ const steps = [
 function JudgeDemoPage() {
   const [stepIndex, setStepIndex] = useState(0);
 
-  const finding = aiDetectorFindings.find((entry) => entry.candidate === 'David Mwangi');
-  const alert = alertsData.find((entry) => entry.candidate === 'David Mwangi');
-  const profile = candidateProfileData['david-mwangi'];
+  const { data: aiDetectorFindings } = useApi(getAIDetectorFindings);
+  const { data: alertsData } = useApi(getAlerts);
+  const { data: profile } = useApi(getCandidateProfile, ['david-mwangi']);
+  const { data: auditTrailBlocks } = useApi(getAuditTrail);
 
-  const auditRows = useMemo(() => auditTrailBlocks.slice(-3), []);
+  const finding = useMemo(
+    () => aiDetectorFindings?.find((entry) => entry.candidate === 'David Mwangi'),
+    [aiDetectorFindings],
+  );
+  const alert = useMemo(
+    () => alertsData?.find((entry) => entry.candidate === 'David Mwangi'),
+    [alertsData],
+  );
+  const auditRows = useMemo(() => auditTrailBlocks?.slice(-3) ?? [], [auditTrailBlocks]);
 
   const auditColumns = [
     { header: 'Block', accessor: 'block' },
@@ -130,4 +140,3 @@ function JudgeDemoPage() {
 }
 
 export default JudgeDemoPage;
-

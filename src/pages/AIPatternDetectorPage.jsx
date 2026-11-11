@@ -1,25 +1,30 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
 import StatCard from '../components/StatCard';
-import { aiDetectorFindings, aiDetectorRules, candidatesData } from '../data/mockData';
+import { getAIDetectorFindings, getAIDetectorRules, getCandidates } from '../utils/api';
+import { useApi } from '../utils/useApi';
 
 function AIPatternDetectorPage() {
-  const summary = useMemo(() => {
-    const highRisk = aiDetectorFindings.filter((finding) => finding.severity === 'high').length;
-    const mediumRisk = aiDetectorFindings.filter((finding) => finding.severity === 'medium').length;
-    const avgConfidence =
-      aiDetectorFindings.reduce((sum, finding) => sum + finding.confidence, 0) / (aiDetectorFindings.length || 1);
+  const { data: aiDetectorFindings } = useApi(getAIDetectorFindings);
+  const { data: aiDetectorRules } = useApi(getAIDetectorRules);
+  const { data: candidatesData } = useApi(getCandidates);
 
+  const summary = useMemo(() => {
+    if (!aiDetectorFindings) return { scanned: 0, flagged: 0, highRisk: 0, mediumRisk: 0, avgConfidence: '—' };
+    const highRisk = aiDetectorFindings.filter((f) => f.severity === 'high').length;
+    const mediumRisk = aiDetectorFindings.filter((f) => f.severity === 'medium').length;
+    const avgConfidence =
+      aiDetectorFindings.reduce((sum, f) => sum + f.confidence, 0) / (aiDetectorFindings.length || 1);
     return {
-      scanned: candidatesData.length,
+      scanned: candidatesData?.length ?? 0,
       flagged: aiDetectorFindings.length,
       highRisk,
       mediumRisk,
       avgConfidence: `${Math.round(avgConfidence * 100)}%`,
     };
-  }, []);
+  }, [aiDetectorFindings, candidatesData]);
 
   const findingColumns = [
     { header: 'Candidate', accessor: 'candidate' },
@@ -70,16 +75,15 @@ function AIPatternDetectorPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-navy">Detection Findings</h2>
-        <DataTable columns={findingColumns} data={aiDetectorFindings} caption="AI detector findings" />
+        <DataTable columns={findingColumns} data={aiDetectorFindings ?? []} caption="AI detector findings" />
       </section>
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-navy">Scoring Rules</h2>
-        <DataTable columns={ruleColumns} data={aiDetectorRules} caption="AI detector rules" />
+        <DataTable columns={ruleColumns} data={aiDetectorRules ?? []} caption="AI detector rules" />
       </section>
     </div>
   );
 }
 
 export default AIPatternDetectorPage;
-

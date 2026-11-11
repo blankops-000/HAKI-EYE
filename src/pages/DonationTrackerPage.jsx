@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CartesianGrid,
   Cell,
@@ -15,7 +15,8 @@ import {
 import ChartCard from '../components/ChartCard';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
-import { candidatesData, donationRecords, partiesData } from '../data/mockData';
+import { getCandidates, getDonationRecords, getParties } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { lineChartCursor, sharedTooltipProps } from '../utils/chartTheme';
 import { downloadCsv } from '../utils/csv';
 import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
@@ -23,23 +24,27 @@ import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
 const pieColors = ['#10B981', '#0F172A', '#F59E0B'];
 
 function DonationTrackerPage() {
+  const { data: candidatesData } = useApi(getCandidates);
+  const { data: partiesData } = useApi(getParties);
+  const { data: donationRecords } = useApi(getDonationRecords);
+
   const [partyFilter, setPartyFilter] = useState('all');
   const [candidateFilter, setCandidateFilter] = useState('all');
 
   const filteredCandidates = useMemo(() => {
-    if (partyFilter === 'all') {
-      return candidatesData;
-    }
+    if (!candidatesData) return [];
+    if (partyFilter === 'all') return candidatesData;
     return candidatesData.filter((candidate) => candidate.party === partyFilter);
-  }, [partyFilter]);
+  }, [candidatesData, partyFilter]);
 
   const filteredRecords = useMemo(() => {
+    if (!donationRecords) return [];
     return donationRecords.filter((record) => {
       const matchesParty = partyFilter === 'all' || record.party === partyFilter;
       const matchesCandidate = candidateFilter === 'all' || record.candidateId === candidateFilter;
       return matchesParty && matchesCandidate;
     });
-  }, [partyFilter, candidateFilter]);
+  }, [donationRecords, partyFilter, candidateFilter]);
 
   const timelineData = useMemo(() => {
     const monthlyTotals = filteredRecords.reduce((acc, record) => {
@@ -98,7 +103,7 @@ function DonationTrackerPage() {
             className="ui-input"
           >
             <option value="all">All Parties</option>
-            {partiesData.map((party) => (
+            {(partiesData ?? []).map((party) => (
               <option key={party.id} value={party.name}>
                 {party.name}
               </option>
@@ -189,4 +194,3 @@ function DonationTrackerPage() {
 }
 
 export default DonationTrackerPage;
-

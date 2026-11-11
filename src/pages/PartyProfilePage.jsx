@@ -1,18 +1,27 @@
-﻿import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import ChartCard from '../components/ChartCard';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
-import { partiesData, partyComparisonByCandidate } from '../data/mockData';
+import { getPartyComparisonByCandidate, getPartyProfile } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { barChartCursor, sharedTooltipProps } from '../utils/chartTheme';
 import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
 
 function PartyProfilePage() {
   const { partyId } = useParams();
 
-  const party = useMemo(() => partiesData.find((item) => item.id === partyId), [partyId]);
+  const { data: party, loading } = useApi(getPartyProfile, [partyId], { skip: !partyId });
+  const { data: candidateComparison } = useApi(getPartyComparisonByCandidate, [partyId], { skip: !partyId });
+
+  if (loading) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Loading party profile…
+      </div>
+    );
+  }
 
   if (!party) {
     return (
@@ -55,7 +64,7 @@ function PartyProfilePage() {
         <ChartCard title="Candidate Funding Comparison">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={partyComparisonByCandidate[party.id] || []}>
+              <BarChart data={candidateComparison ?? []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis dataKey="name" stroke="var(--chart-axis)" tick={{ fill: 'var(--chart-axis)', fontSize: 12 }} />
                 <YAxis
@@ -76,4 +85,3 @@ function PartyProfilePage() {
 }
 
 export default PartyProfilePage;
-

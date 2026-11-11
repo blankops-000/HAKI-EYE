@@ -1,47 +1,53 @@
-﻿import { Database, Download, FileText } from 'lucide-react';
+import { Database, Download, FileText } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { alertsData, candidatesData, dataFreshness, partiesData } from '../data/mockData';
+import { getAlerts, getCandidates, getDataFreshness, getParties } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { downloadCsv } from '../utils/csv';
 
-const datasets = [
-  {
-    id: 'candidates',
-    title: 'Candidate Risk Register',
-    description: 'Candidate-level totals, party affiliation, and risk ratings.',
-    icon: FileText,
-    rows: candidatesData,
-    filename: 'uwazi-eye-candidates.csv',
-  },
-  {
-    id: 'alerts',
-    title: 'Anomaly Alerts Log',
-    description: 'Detected financing anomalies with severity and case status.',
-    icon: Database,
-    rows: alertsData,
-    filename: 'uwazi-eye-alerts.csv',
-  },
-  {
-    id: 'parties',
-    title: 'Party Funding Snapshot',
-    description: 'Aggregate party indicators for risk, anonymity, and candidate counts.',
-    icon: FileText,
-    rows: partiesData.map((party) => ({
-      party: party.name,
-      totalFunds: party.totalFunds,
-      averageRiskScore: party.averageRiskScore,
-      anonymousPercent: party.anonymousPercent,
-      candidateCount: party.candidateCount,
-    })),
-    filename: 'uwazi-eye-parties.csv',
-  },
-];
-
 function OpenDataPage() {
+  const { data: candidatesData } = useApi(getCandidates);
+  const { data: alertsData } = useApi(getAlerts);
+  const { data: partiesData } = useApi(getParties);
+  const { data: dataFreshness } = useApi(getDataFreshness);
+
+  const datasets = [
+    {
+      id: 'candidates',
+      title: 'Candidate Risk Register',
+      description: 'Candidate-level totals, party affiliation, and risk ratings.',
+      icon: FileText,
+      rows: candidatesData ?? [],
+      filename: 'uwazi-eye-candidates.csv',
+    },
+    {
+      id: 'alerts',
+      title: 'Anomaly Alerts Log',
+      description: 'Detected financing anomalies with severity and case status.',
+      icon: Database,
+      rows: alertsData ?? [],
+      filename: 'uwazi-eye-alerts.csv',
+    },
+    {
+      id: 'parties',
+      title: 'Party Funding Snapshot',
+      description: 'Aggregate party indicators for risk, anonymity, and candidate counts.',
+      icon: FileText,
+      rows: (partiesData ?? []).map((party) => ({
+        party: party.name,
+        totalFunds: party.totalFunds,
+        averageRiskScore: party.averageRiskScore,
+        anonymousPercent: party.anonymousPercent,
+        candidateCount: party.candidateCount,
+      })),
+      filename: 'uwazi-eye-parties.csv',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Open Government Data"
-        title="Open Data & Public Evidence"
+        title="Open Data &amp; Public Evidence"
         description="Download structured datasets to support independent analysis by civil society, researchers, and journalists."
       />
 
@@ -72,9 +78,9 @@ function OpenDataPage() {
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
         <h2 className="text-base font-semibold text-navy">Data Governance Notes</h2>
         <ul className="mt-3 space-y-2 text-sm text-slate-600">
-          <li>Last updated: {dataFreshness.lastUpdated}</li>
-          <li>Reporting cycle: {dataFreshness.reportingCycle}</li>
-          <li>Source note: {dataFreshness.sourceNote}</li>
+          <li>Last updated: {dataFreshness?.lastUpdated ?? '—'}</li>
+          <li>Reporting cycle: {dataFreshness?.reportingCycle ?? '—'}</li>
+          <li>Source note: {dataFreshness?.sourceNote ?? '—'}</li>
           <li>License: Open for civic oversight, academic review, and non-commercial transparency reporting.</li>
         </ul>
       </section>
@@ -83,4 +89,3 @@ function OpenDataPage() {
 }
 
 export default OpenDataPage;
-

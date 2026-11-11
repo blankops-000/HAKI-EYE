@@ -1,8 +1,9 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
-import { candidatesData } from '../data/mockData';
+import { getCandidates } from '../utils/api';
+import { useApi } from '../utils/useApi';
 
 const STORAGE_KEY = 'uwazi_eye_public_reports';
 const SEEDED_REPORTS = [
@@ -19,14 +20,6 @@ const SEEDED_REPORTS = [
   },
 ];
 
-const defaultForm = {
-  candidate: candidatesData[0]?.name || '',
-  anomalyType: 'Unusual large donation',
-  description: '',
-  evidenceLink: '',
-  reporterType: 'Citizen',
-};
-
 const statusStyles = {
   Pending: 'bg-amber-100 text-amber-700',
   'Under Review': 'bg-blue-100 text-blue-700',
@@ -35,6 +28,16 @@ const statusStyles = {
 };
 
 function PublicReportsPage() {
+  const { data: candidatesData } = useApi(getCandidates);
+
+  const defaultForm = useMemo(() => ({
+    candidate: candidatesData?.[0]?.name || '',
+    anomalyType: 'Unusual large donation',
+    description: '',
+    evidenceLink: '',
+    reporterType: 'Citizen',
+  }), [candidatesData]);
+
   const [form, setForm] = useState(defaultForm);
   const [reports, setReports] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -52,6 +55,13 @@ function PublicReportsPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
   }, [reports]);
 
+  // Sync default candidate once data loads
+  useEffect(() => {
+    if (candidatesData?.[0] && !form.candidate) {
+      setForm((current) => ({ ...current, candidate: candidatesData[0].name }));
+    }
+  }, [candidatesData, form.candidate]);
+
   const filteredReports = useMemo(() => {
     return reports.filter((report) => statusFilter === 'all' || report.status === statusFilter);
   }, [reports, statusFilter]);
@@ -62,9 +72,7 @@ function PublicReportsPage() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (form.description.trim().length < 20) {
-      return;
-    }
+    if (form.description.trim().length < 20) return;
 
     const newReport = {
       id: `RPT-${Date.now().toString().slice(-6)}`,
@@ -148,7 +156,7 @@ function PublicReportsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Citizen Oversight"
-        title="Public Reporting & Moderation Queue"
+        title="Public Reporting &amp; Moderation Queue"
         description="Citizens and watchdog groups can submit suspicious donation reports for triage and case review."
       />
 
@@ -165,7 +173,7 @@ function PublicReportsPage() {
               onChange={(event) => handleChange('candidate', event.target.value)}
               className="ui-input"
             >
-              {candidatesData.map((candidate) => (
+              {(candidatesData ?? []).map((candidate) => (
                 <option key={candidate.id} value={candidate.name}>
                   {candidate.name}
                 </option>
@@ -235,10 +243,7 @@ function PublicReportsPage() {
           </div>
 
           <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="ui-button-primary"
-            >
+            <button type="submit" className="ui-button-primary">
               Submit Report
             </button>
           </div>
@@ -252,8 +257,8 @@ function PublicReportsPage() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-            className="ui-input"
-          >
+              className="ui-input"
+            >
               <option value="all">All Statuses</option>
               <option value="Pending">Pending</option>
               <option value="Under Review">Under Review</option>
@@ -276,4 +281,3 @@ function PublicReportsPage() {
 }
 
 export default PublicReportsPage;
-

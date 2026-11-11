@@ -1,4 +1,5 @@
-﻿import { AlertTriangle, ArrowRight, BarChart3, Coins, Users2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { AlertTriangle, ArrowRight, BarChart3, Coins, Users2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Bar,
@@ -21,20 +22,29 @@ import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
 import StatCard from '../components/StatCard';
 import {
-  candidatesData,
-  dashboardAnomalies,
-  dataFreshness,
-  donationBreakdownData,
-  donationsOverTimeData,
-  partyComparisonData,
-  platformSummary,
-} from '../data/mockData';
+  getCandidates,
+  getDashboardAnomalies,
+  getDashboardSummary,
+  getDataFreshness,
+  getDonationBreakdown,
+  getDonationsOverTime,
+  getPartyComparison,
+} from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { barChartCursor, lineChartCursor, sharedTooltipProps } from '../utils/chartTheme';
 import { formatAxisCurrency, formatCurrency } from '../utils/formatters';
 
 const pieColors = ['#10B981', '#0F172A', '#F59E0B'];
 
 function DashboardPage() {
+  const { data: platformSummary } = useApi(getDashboardSummary);
+  const { data: donationsOverTimeData } = useApi(getDonationsOverTime);
+  const { data: donationBreakdownData } = useApi(getDonationBreakdown);
+  const { data: partyComparisonData } = useApi(getPartyComparison);
+  const { data: dashboardAnomalies } = useApi(getDashboardAnomalies);
+  const { data: dataFreshness } = useApi(getDataFreshness);
+  const { data: candidatesData } = useApi(getCandidates);
+
   const anomalyColumns = [
     { header: 'Candidate', accessor: 'candidate' },
     { header: 'Type', accessor: 'type' },
@@ -46,13 +56,16 @@ function DashboardPage() {
     { header: 'Date', accessor: 'date' },
   ];
 
-  const watchlist = [...candidatesData]
-    .sort((a, b) => b.riskScore - a.riskScore)
-    .slice(0, 4)
-    .map((candidate) => ({
-      ...candidate,
-      riskSignal: candidate.riskScore >= 70 ? 'Escalate review' : 'Routine monitoring',
-    }));
+  const watchlist = useMemo(() => {
+    if (!candidatesData) return [];
+    return [...candidatesData]
+      .sort((a, b) => b.riskScore - a.riskScore)
+      .slice(0, 4)
+      .map((candidate) => ({
+        ...candidate,
+        riskSignal: candidate.riskScore >= 70 ? 'Escalate review' : 'Routine monitoring',
+      }));
+  }, [candidatesData]);
 
   return (
     <div className="space-y-6">
@@ -71,17 +84,17 @@ function DashboardPage() {
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Total Funds Tracked" value={formatCurrency(platformSummary.totalFunds)} icon={Coins} />
-        <StatCard title="Total Candidates" value={platformSummary.totalCandidates} icon={Users2} />
+        <StatCard title="Total Funds Tracked" value={platformSummary ? formatCurrency(platformSummary.totalFunds) : '—'} icon={Coins} />
+        <StatCard title="Total Candidates" value={platformSummary?.totalCandidates ?? '—'} icon={Users2} />
         <StatCard
           title="Flagged Anomalies"
-          value={platformSummary.flaggedAnomalies}
+          value={platformSummary?.flaggedAnomalies ?? '—'}
           icon={AlertTriangle}
           tone="warning"
         />
         <StatCard
           title="Transparency Index"
-          value={`${platformSummary.transparencyIndex}%`}
+          value={platformSummary ? `${platformSummary.transparencyIndex}%` : '—'}
           icon={BarChart3}
           helper="Composite score"
         />
@@ -91,7 +104,7 @@ function DashboardPage() {
         <ChartCard title="Donations Over Time" subtitle="KES contributions received per month">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={donationsOverTimeData}>
+              <LineChart data={donationsOverTimeData ?? []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                 <XAxis dataKey="month" stroke="var(--chart-axis)" tick={{ fill: 'var(--chart-axis)', fontSize: 12 }} />
                 <YAxis
@@ -118,8 +131,8 @@ function DashboardPage() {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={donationBreakdownData} dataKey="value" nameKey="name" innerRadius={65} outerRadius={105}>
-                  {donationBreakdownData.map((entry, index) => (
+                <Pie data={donationBreakdownData ?? []} dataKey="value" nameKey="name" innerRadius={65} outerRadius={105}>
+                  {(donationBreakdownData ?? []).map((entry, index) => (
                     <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
                   ))}
                 </Pie>
@@ -134,7 +147,7 @@ function DashboardPage() {
       <ChartCard title="Party Comparison" subtitle="Total tracked funds by party">
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={partyComparisonData}>
+            <BarChart data={partyComparisonData ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
               <XAxis dataKey="party" stroke="var(--chart-axis)" tick={{ fill: 'var(--chart-axis)', fontSize: 12 }} />
               <YAxis
@@ -153,7 +166,7 @@ function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-2">
         <div>
           <h2 className="mb-3 text-lg font-semibold text-navy">Recent Flagged Anomalies</h2>
-          <DataTable columns={anomalyColumns} data={dashboardAnomalies} caption="Recent anomalies" />
+          <DataTable columns={anomalyColumns} data={dashboardAnomalies ?? []} caption="Recent anomalies" />
         </div>
 
         <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
@@ -173,10 +186,12 @@ function DashboardPage() {
             ))}
           </ul>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-            <p>Last updated: {dataFreshness.lastUpdated}</p>
-            <p>Cycle: {dataFreshness.reportingCycle}</p>
-          </div>
+          {dataFreshness && (
+            <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+              <p>Last updated: {dataFreshness.lastUpdated}</p>
+              <p>Cycle: {dataFreshness.reportingCycle}</p>
+            </div>
+          )}
 
           <Link
             to="/dashboard/open-data"
@@ -192,4 +207,3 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
-

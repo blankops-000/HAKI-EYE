@@ -1,9 +1,10 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
 import StatCard from '../components/StatCard';
-import { alertsData } from '../data/mockData';
+import { getAlerts } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { downloadCsv } from '../utils/csv';
 
 const statusStyles = {
@@ -13,18 +14,21 @@ const statusStyles = {
 };
 
 function AlertsPage() {
+  const { data: alertsData } = useApi(getAlerts);
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
 
   const filteredAlerts = useMemo(() => {
+    if (!alertsData) return [];
     return alertsData.filter((alert) => {
       const matchesSearch = alert.candidate.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === 'all' || alert.status === statusFilter;
       const matchesSeverity = severityFilter === 'all' || alert.severity === severityFilter;
       return matchesSearch && matchesStatus && matchesSeverity;
     });
-  }, [search, statusFilter, severityFilter]);
+  }, [alertsData, search, statusFilter, severityFilter]);
 
   const summary = useMemo(() => {
     return {
@@ -56,7 +60,7 @@ function AlertsPage() {
     <section className="space-y-4">
       <PageHeader
         eyebrow="Enforcement"
-        title="Alerts & Case Status"
+        title="Alerts &amp; Case Status"
         description="Active anomaly alerts with review state for investigators."
       />
 
@@ -133,4 +137,3 @@ function AlertsPage() {
 }
 
 export default AlertsPage;
-

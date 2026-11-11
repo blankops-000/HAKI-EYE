@@ -1,34 +1,47 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DataTable from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import RiskBadge from '../components/RiskBadge';
-import { candidateProfileData, candidatesData, partiesData } from '../data/mockData';
+import { getCandidates, getParties } from '../utils/api';
+import { useApi } from '../utils/useApi';
 import { formatCurrency } from '../utils/formatters';
 
 function CandidatesPage() {
+  const { data: candidatesData } = useApi(getCandidates);
+  const { data: partiesData } = useApi(getParties);
+
   const [query, setQuery] = useState('');
   const [partyFilter, setPartyFilter] = useState('all');
   const [riskFilter, setRiskFilter] = useState('all');
-  const [leftCandidateId, setLeftCandidateId] = useState(candidatesData[0]?.id || '');
-  const [rightCandidateId, setRightCandidateId] = useState(candidatesData[1]?.id || '');
+  const [leftCandidateId, setLeftCandidateId] = useState('');
+  const [rightCandidateId, setRightCandidateId] = useState('');
+
+  // Set default comparison candidates once data loads
+  useMemo(() => {
+    if (candidatesData && !leftCandidateId) {
+      setLeftCandidateId(candidatesData[0]?.id || '');
+      setRightCandidateId(candidatesData[1]?.id || '');
+    }
+  }, [candidatesData, leftCandidateId]);
 
   const filteredCandidates = useMemo(() => {
+    if (!candidatesData) return [];
     return candidatesData.filter((candidate) => {
       const matchesQuery = candidate.name.toLowerCase().includes(query.toLowerCase());
       const matchesParty = partyFilter === 'all' || candidate.party === partyFilter;
       const matchesRisk = riskFilter === 'all' || candidate.riskLevel === riskFilter;
       return matchesQuery && matchesParty && matchesRisk;
     });
-  }, [query, partyFilter, riskFilter]);
+  }, [candidatesData, query, partyFilter, riskFilter]);
 
   const leftCandidate = useMemo(
-    () => candidatesData.find((candidate) => candidate.id === leftCandidateId),
-    [leftCandidateId],
+    () => candidatesData?.find((candidate) => candidate.id === leftCandidateId),
+    [candidatesData, leftCandidateId],
   );
   const rightCandidate = useMemo(
-    () => candidatesData.find((candidate) => candidate.id === rightCandidateId),
-    [rightCandidateId],
+    () => candidatesData?.find((candidate) => candidate.id === rightCandidateId),
+    [candidatesData, rightCandidateId],
   );
 
   const columns = [
@@ -105,7 +118,7 @@ function CandidatesPage() {
             className="ui-input"
           >
             <option value="all">All Parties</option>
-            {partiesData.map((party) => (
+            {(partiesData ?? []).map((party) => (
               <option key={party.id} value={party.name}>
                 {party.name}
               </option>
@@ -155,7 +168,7 @@ function CandidatesPage() {
               onChange={(event) => setLeftCandidateId(event.target.value)}
               className="ui-input"
             >
-              {candidatesData.map((candidate) => (
+              {(candidatesData ?? []).map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name}
                 </option>
@@ -173,7 +186,7 @@ function CandidatesPage() {
               onChange={(event) => setRightCandidateId(event.target.value)}
               className="ui-input"
             >
-              {candidatesData.map((candidate) => (
+              {(candidatesData ?? []).map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name}
                 </option>
@@ -184,24 +197,19 @@ function CandidatesPage() {
 
         {leftCandidate && rightCandidate && (
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {[leftCandidate, rightCandidate].map((candidate) => {
-              const profile = candidateProfileData[candidate.id];
-              return (
-                <div key={candidate.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-navy">{candidate.name}</p>
-                    <RiskBadge level={candidate.riskLevel} />
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600">{candidate.party}</p>
-                  <div className="mt-3 space-y-1 text-sm text-slate-700">
-                    <p>Total Funds: {formatCurrency(candidate.totalFunds)}</p>
-                    <p>Risk Score: {candidate.riskScore}/100</p>
-                    <p>Donors: {profile?.stats?.donorCount || 'N/A'}</p>
-                    <p>Anonymous Share: {profile?.stats?.anonymousPercent ?? 'N/A'}%</p>
-                  </div>
+            {[leftCandidate, rightCandidate].map((candidate) => (
+              <div key={candidate.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-navy">{candidate.name}</p>
+                  <RiskBadge level={candidate.riskLevel} />
                 </div>
-              );
-            })}
+                <p className="mt-1 text-sm text-slate-600">{candidate.party}</p>
+                <div className="mt-3 space-y-1 text-sm text-slate-700">
+                  <p>Total Funds: {formatCurrency(candidate.totalFunds)}</p>
+                  <p>Risk Score: {candidate.riskScore}/100</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -220,4 +228,3 @@ function CandidatesPage() {
 }
 
 export default CandidatesPage;
-
